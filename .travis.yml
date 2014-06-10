@@ -34,7 +34,6 @@ install:
   # Install Drush.
   - composer global require drush/drush:7.0.0-alpha5
 
-before_script:
   # Checkout a directory structure with all dependencies.
   - git clone --depth 1 --branch 2335879-2342543-1869548 https://github.com/dickolsson/drupal-core.git $TRAVIS_BUILD_DIR/../drupal
   - git clone --branch 8.x-1.x https://github.com/dickolsson/drupal-key_value.git $TRAVIS_BUILD_DIR/../drupal/modules/key_value
@@ -44,6 +43,7 @@ before_script:
   - cd $TRAVIS_BUILD_DIR/../drupal
   - php -d sendmail_path=`which true` ~/.composer/vendor/bin/drush.php --yes site-install --db-url=mysql://root:@127.0.0.1/drupal testing
 
+before_script:
   # Enable required modules and ignore any output to not break the test.
   - drush --yes pm-enable multiversion || true
 
@@ -52,7 +52,7 @@ script:
   - drush en --yes simpletest
   - drush cr
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - php core/scripts/run-tests.sh --verbose --color --concurrency 4 --php `which php` --url http://localhost "key_value,multiversion" | tee /tmp/test.txt ; export TEST_EXIT=${PIPESTATUS[0]}
+  - php core/scripts/run-tests.sh --verbose --color --concurrency 4 --php `which php` --url http://localhost --all | tee /tmp/test.txt ; export TEST_EXIT=${PIPESTATUS[0]}
   # Simpletest does not exit with code 0 on success, so we will need to analyze
   # the output to ascertain whether the tests passed.
   - TEST_SIMPLETEST=$(! egrep -i "([0-9]+ fails)|(PHP Fatal error)|([0-9]+ exceptions)" /tmp/test.txt > /dev/null)$?
