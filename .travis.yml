@@ -1,7 +1,9 @@
 language: php
 
+cache: apt
+
 php:
-  - 5.4
+  #- 5.4
   - 5.5
 
 mysql:
@@ -9,27 +11,19 @@ mysql:
   username: root
   encoding: utf8
 
-env:
-  - PATH=$PATH:/home/travis/.composer/vendor/bin
-
-before_install:
-  # Update Composer so that the Drush installation doesn't fail.
-  - composer selfupdate
-
 install:
-  # Install Apache.
+  # Install Apache
   - sudo apt-get install apache2 libapache2-mod-fastcgi
 
-  # Set up PHP-FPM.
-  - sudo cp ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf.default ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf
-  - sudo a2enmod rewrite actions fastcgi alias
-  - echo "cgi.fix_pathinfo = 1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+  # Configure PHP
+  - echo -e "opcache.enable_cli=1\ncgi.fix_pathinfo=1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+  - cp ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf.default ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf
   - ~/.phpenv/versions/$(phpenv version-name)/sbin/php-fpm
 
-  # Set up the Apache vhost.
+  # Configure Apache
   - sudo cp -f $TRAVIS_BUILD_DIR/.travis/apache-vhost.conf /etc/apache2/sites-available/default
   - sudo sed -e "s?%TRAVIS_BUILD_DIR%?$TRAVIS_BUILD_DIR/../drupal?g" --in-place /etc/apache2/sites-available/default
-  - sudo service apache2 restart
+  - sudo a2enmod rewrite actions fastcgi alias && sudo service apache2 restart
 
   # Install Drush.
   - composer global require drush/drush:7.0.0-alpha5
@@ -41,7 +35,6 @@ install:
 
   # Install the site that will host our tests.
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - php -d sendmail_path=`which true` ~/.composer/vendor/bin/drush.php --yes site-install --db-url=mysql://root:@127.0.0.1/drupal testing
 
 before_script:
   # Enable required modules and ignore any output to not break the test.
