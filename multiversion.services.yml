@@ -1,5 +1,6 @@
 parameters:
   workspace.default: default
+  required_cache_contexts: ['workspace']
 
 services:
   entity.compaction.manager:
@@ -28,6 +29,11 @@ services:
     arguments: ['@request_stack', '@entity.manager']
     tags:
       - { name: service_collector, tag: workspace_negotiator, call: addNegotiator }
+  cache_context.workspace:
+    class: Drupal\multiversion\WorkspaceCacheContext
+    arguments: ['@workspace.manager']
+    tags:
+      - { name: cache.context }
 
   # @todo Simplify the container definition for negotiators
   workspace.negotiator.default:
