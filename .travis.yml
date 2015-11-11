@@ -14,13 +14,6 @@ mysql:
   username: root
   encoding: utf8
 
-env:
-  - PATH=$PATH:/home/travis/.composer/vendor/bin
-
-before_install:
-  # Update Composer so that the Drush installation doesn't fail.
-  - composer selfupdate
-
 install:
   - sudo apt-get update
   # Install Apache.
@@ -37,8 +30,11 @@ install:
   - sudo sed -e "s?%TRAVIS_BUILD_DIR%?$TRAVIS_BUILD_DIR/../drupal?g" --in-place /etc/apache2/sites-available/default
   - sudo service apache2 restart
 
-  # Install Drush.
-  - composer global require drush/drush:dev-master
+# Install Drush.
+  - wget https://github.com/drush-ops/drush/releases/download/8.0.0-rc3/drush.phar
+  - chmod +x drush.phar
+  - sudo mv drush.phar /usr/local/bin/drush
+  - drush init
 
 before_script:
   # Try to prevent Mysql has gone away.
@@ -54,7 +50,7 @@ before_script:
 
   # Install the site that will host our tests.
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - php -d sendmail_path=`which true` ~/.composer/vendor/bin/drush.php --yes site-install --db-url=mysql://root:@127.0.0.1/drupal testing
+  - php -d sendmail_path=`which true` /usr/local/bin/drush --yes site-install --db-url=mysql://root:@127.0.0.1/drupal testing
   # Create the private directory.
   - sudo mkdir sites/default/files/private
   - sudo chmod 777 -R sites/default/files
